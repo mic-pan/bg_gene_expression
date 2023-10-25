@@ -1,7 +1,7 @@
-# Supplementary code for "Mathematical modelling of gene regulatory networks in synthetic biology: model reduction using a thermodynamically consistent approach"
+# Supplementary code for "Thermodynamically-consistent, reduced models of gene regulatory networks"
 
 ## Scripts
-This repository contains the Julia code required to run the bond graph model in the study *Mathematical modelling of gene regulatory networks in synthetic biology: model reduction using a thermodynamically consistent approach*. The following files will generate the results figures as indicated below:
+This repository contains the Julia code required to run the bond graph model in the study *Thermodynamically-consistent, reduced models of gene regulatory networks*. The following files will generate the results figures as indicated below:
 | Script                           | Figures         |
 |----------------------------------|-----------------|
 |`elongation_model_comparison.jl`  | Fig. 7          |
