@@ -1,5 +1,5 @@
 # Option to run full models (which could take a long time)
-run_full_model = false
+run_full_model = true
 
 using DifferentialEquations, Sundials, Plots, DataFrames, VegaLite, CSV
 include("gene_circuits.jl")
@@ -199,7 +199,8 @@ set_params_repressilator!(model,n=1200,simple=simple)
 tspan = (0.0,500.0)
 sol = simulate(model,tspan;options...)
 
-# Compile results into DataFrame
+# Compile results into DataFrame.
+# Had to reorder genes due to inconsistency of regulatory interactions with manuscript
 @variables G1₊mRNA₊q(t) G2₊mRNA₊q(t) G3₊mRNA₊q(t) P1₊q(t) P2₊q(t) P3₊q(t) R₊q(t)
 function make_df_repressilator(sol)
     t_plot = 0.0:1.0:150.0
@@ -215,14 +216,14 @@ function make_df_repressilator(sol)
         M = sol(t_plot,idxs=G2₊mRNA₊q).u,
         P = sol(t_plot,idxs=P2₊q).u,
         model = :Repressilator,
-        gene = "Gene 2"
+        gene = "Gene 3"
     )
     df_repressilator3 = DataFrame(
         t = t_plot,
         M = sol(t_plot,idxs=G3₊mRNA₊q).u,
         P = sol(t_plot,idxs=P3₊q).u,
         model = :Repressilator,
-        gene = "Gene 3"
+        gene = "Gene 2"
     )
     df_repressilator = [df_repressilator1;df_repressilator2;df_repressilator3]
 end
