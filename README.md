@@ -5,11 +5,11 @@ This repository contains the Julia code required to run the bond graph model in 
 | Script                           | Figures         |
 |----------------------------------|-----------------|
 |`elongation_model_comparison.jl`  | Fig. 7          |
-|`translation_model_comparison.jl` | Figs. 8, 9, 17  |
-|`gene_regulation_sims.jl`         | Figs. 10-11, 18 |
+|`translation_model_comparison.jl` | Figs. 8, 9, S2  |
+|`gene_regulation_sims.jl`         | Figs. 10-11, S3 |
 |`resource_dependence.jl`          | Figs. 12-14     |
 |`heterogeneity.jl`                | Fig. 15         |
-|`toggle_phase_plane.jl`           | Fig. 16         |
+|`toggle_phase_plane.jl`           | Fig. S1         |
 
 
 ## Instructions for running code
