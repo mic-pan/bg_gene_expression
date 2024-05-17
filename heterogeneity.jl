@@ -1,5 +1,5 @@
 # Option to run simulations or load results from previous simulations
-load_results = true
+load_results = false
 
 using Peaks, DataFrames, Sundials, LinearAlgebra, Distributions, Random, VegaLite, CSV
 using JSON, Optim, Statistics

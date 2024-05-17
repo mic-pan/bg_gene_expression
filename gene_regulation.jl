@@ -47,7 +47,7 @@ re_el = Dict(
         )
     ),
     :equations => [
-        0 ~ v - r*(exp(E[1]) - exp(E[3] - n*E[2]))*(1-exp(E[2])/α)/((α/E[2])^n - 1),
+        0 ~ v - r*(exp(E[1]) - exp(E[3] - n*E[2]))*(1-exp(E[2])/α)/((α/exp(E[2]))^n - 1),
         0 ~ F[1] - v,
         0 ~ F[2] - n*v,
         0 ~ F[3] + v
