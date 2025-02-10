@@ -1,7 +1,7 @@
 # Option to run full models (which could take a long time)
 run_full_model = true
 
-using DifferentialEquations, Sundials, Plots, DataFrames, VegaLite, CSV
+using DifferentialEquations, Sundials, DataFrames, VegaLite, CSV
 include("gene_circuits.jl")
 include("vl_functions.jl")
 include("chemical_systems.jl")
@@ -489,3 +489,296 @@ savevl(fig_toggle_M_c,"output/toggle_sim_comparison_M")
 savevl(fig_toggle_P_c,"output/toggle_sim_comparison_P")
 savevl(fig_repressilator_M_c,"output/repressilator_sim_comparison_M")
 savevl(fig_repressilator_P_c,"output/repressilator_sim_comparison_P")
+
+### Run analysis again with Hill coefficient of 4
+## Run simulations of the toggle switch
+# Define toggle switch model
+model = ToggleSwitch(n=1200,n_lumps=n_lumps,log=true,h=4)
+set_params_toggle!(model,n=1200,simple=simple,h=4)
+
+# Run simulations on toggle switch model
+@variables G1₊mRNA₊q(t) P1₊q(t) G2₊mRNA₊q(t) P2₊q(t)
+tspan = (0.0,200.0)
+sys = ODESystem(model)
+prob = ODEProblem(sys,[P1₊q => 50.0, P2₊q => 100.0],tspan,[];options...)
+sol_toggle1 = solve(prob,CVODE_BDF())
+prob = ODEProblem(sys,[P1₊q => 200.0, P2₊q => 100.0],tspan,[];options...)
+sol_toggle2 = solve(prob,CVODE_BDF())
+
+# Extract results into DataFrame
+df1 = make_df_toggle(sol_toggle1,1)
+df2 = make_df_toggle(sol_toggle2,2)
+df_toggle = [df1;df2]
+
+# Plot results
+fig_toggle_M = df_toggle |> vl_config() + @vlplot(
+    :line, width=120, height=90,
+    x={:t, axis={title=""}}, 
+    y={:M, axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059"]
+        }
+    },
+    strokeDash={:sim}
+)
+
+fig_toggle_P = df_toggle |> vl_config() + @vlplot(
+    :line, width=120, height=90,
+    x={:t, axis={title="Time (min)"}}, 
+    y={:P, axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059"]
+        }
+    },
+    strokeDash={:sim}
+)
+
+fig_toggle = df_toggle |> vl_config() + [fig_toggle_M;fig_toggle_P]
+fig_toggle.params["config"]["view"]["stroke"] = :transparent
+
+## Run simulations of repressilator model
+# Construct model of repressilator
+model = Repressilator(n=1200,n_lumps=n_lumps,log=true,h=4)
+set_params_repressilator!(model,n=1200,simple=simple,h=4)
+
+# Run simulations
+tspan = (0.0,500.0)
+sol = simulate(model,tspan;options...)
+
+# Compile results into DataFrame.
+# Had to reorder genes due to inconsistency of regulatory interactions with manuscript
+@variables G1₊mRNA₊q(t) G2₊mRNA₊q(t) G3₊mRNA₊q(t) P1₊q(t) P2₊q(t) P3₊q(t) R₊q(t)
+function make_df_repressilator(sol)
+    t_plot = 0.0:1.0:150.0
+    df_repressilator1 = DataFrame(
+        t = t_plot,
+        M = sol(t_plot,idxs=G1₊mRNA₊q).u,
+        P = sol(t_plot,idxs=P1₊q).u,
+        model = :Repressilator,
+        gene = "Gene 1"
+    )
+    df_repressilator2 = DataFrame(
+        t = t_plot,
+        M = sol(t_plot,idxs=G2₊mRNA₊q).u,
+        P = sol(t_plot,idxs=P2₊q).u,
+        model = :Repressilator,
+        gene = "Gene 3"
+    )
+    df_repressilator3 = DataFrame(
+        t = t_plot,
+        M = sol(t_plot,idxs=G3₊mRNA₊q).u,
+        P = sol(t_plot,idxs=P3₊q).u,
+        model = :Repressilator,
+        gene = "Gene 2"
+    )
+    df_repressilator = [df_repressilator1;df_repressilator2;df_repressilator3]
+end
+df_repressilator = make_df_repressilator(sol)
+
+# Plot results
+fig_repressilator_M = df_repressilator |> vl_config() + @vlplot(
+    :line, width=120, height=90,
+    x={:t, axis={title=""}}, 
+    y={:M, axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059", "#6626bb"]
+        }
+    }
+)
+
+fig_repressilator_P = df_repressilator |> vl_config() + @vlplot(
+    :line, width=120, height=90,
+    x={:t, axis={title="Time (min)"}}, 
+    y={:P, axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059", "#6626bb"]
+        }
+    },
+)
+
+fig_repressilator = df_repressilator |> vl_config() + [fig_repressilator_M;fig_repressilator_P]
+fig_repressilator.params["config"]["view"]["stroke"] = :transparent
+
+savevl(fig_toggle,"output/toggle_sim_hill4")
+savevl(fig_repressilator,"output/repressilator_sim_hill4")
+
+## Compare reduced models to full models
+# File names
+toggle_sim_data = "output/toggle_sim_full_hill4.csv"
+repressilator_sim_data = "output/repressilator_sim_full_hill4.csv"
+
+# Run simulations of full models
+n_lumps = 0
+simple = (n_lumps==1)
+
+if run_full_model == true
+    # Model of toggle switch
+    model = ToggleSwitch(n=1200,n_lumps=n_lumps,log=true,h=4)
+    set_params_toggle!(model,n=1200,simple=simple,h=4)
+    tspan = (0.0,200.0)
+    sys = chemical_odesys(model)
+    prob = ODEProblem(sys,[P1₊q => 50.0, P2₊q => 100.0],tspan,[];options...)
+    sol_toggle1 = solve(prob,CVODE_BDF())
+    prob = ODEProblem(sys,[P1₊q => 200.0, P2₊q => 100.0],tspan,[];options...)
+    sol_toggle2 = solve(prob,CVODE_BDF())
+    
+    df1 = make_df_toggle(sol_toggle1,1)
+    df2 = make_df_toggle(sol_toggle2,2)
+    df_toggle_full = [df1;df2]
+    CSV.write(toggle_sim_data,df_toggle_full)
+
+    # Model of repressilator
+    model = Repressilator(n=1200,n_lumps=n_lumps,log=true,h=4)
+    set_params_repressilator!(model,n=1200,simple=simple,h=4)
+    tspan = (0.0,500.0)
+    odesys = chemical_odesys(model)
+    prob = ODEProblem(odesys,[],tspan,[];options...)
+    sol = solve(prob,CVODE_BDF())
+    df_repressilator_full = make_df_repressilator(sol)
+    CSV.write(repressilator_sim_data,df_repressilator)
+end
+
+# Plot comparison for toggle switch
+df_toggle_full = DataFrame(CSV.File(toggle_sim_data))
+df_toggle2 = subset(df_toggle, :sim => ByRow(x -> x == 1))
+df_toggle2.type .= "Reduced"
+df_toggle_full2 = subset(df_toggle_full, :sim => ByRow(x -> x == 1))
+df_toggle_full2.type .= "Full"
+df_toggle_comparison = vcat(df_toggle_full2,df_toggle2) 
+
+fig_config = @vlplot(
+    resolve={scale={color=:independent}},
+    config={
+        view={stroke=:transparent},
+        font="Arial",
+        legend={disable=true},
+        axis={
+            titleFontWeight=:normal,
+            grid=false,
+            tickSize=3,
+            domainColor=:black,
+            tickColor=:black,
+        },
+    }
+)
+
+fig_toggle_M_c = fig_config + @vlplot(
+    :line, data=df_toggle_full2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"M:q", axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059"]
+        }
+    }
+) + @vlplot(
+    {:line, color="#f462a3", strokeDash=[4,4]}, data=df_toggle2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"M:q", axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#f462a3"]
+        }
+    }
+)
+
+fig_toggle_P_c = fig_config + @vlplot(
+    :line, data=df_toggle_full2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"P:q", axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059"]
+        }
+    }
+) + @vlplot(
+    {:line, color="#f462a3", strokeDash=[4,4]}, data=df_toggle2, width=120, height=90,
+    x={"t:q", axis={title="Time (min)"}}, 
+    y={"P:q", axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#f462a3"]
+        }
+    }
+)
+
+# Plot comparison for repressilator
+df_repressilator_full = DataFrame(CSV.File(repressilator_sim_data))
+df_repressilator2 = copy(df_repressilator)
+df_repressilator2.type .= "Reduced"
+df_repressilator_full2 = copy(df_repressilator_full)
+df_repressilator_full2.type .= "Full"
+
+fig_repressilator_M_c = fig_config + @vlplot(
+    :line, data=df_repressilator_full2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"M:q", axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059", "#6626bb"]
+        }
+    }
+) + @vlplot(
+    {:line, color="#f462a3", strokeDash=[4,4]}, data=df_repressilator2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"M:q", axis={title="mRNA"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#f462a3"]
+        }
+    }
+)
+
+fig_repressilator_P_c = fig_config + @vlplot(
+    :line, data=df_repressilator_full2, width=120, height=90,
+    x={"t:q", axis={title="Time (min)"}}, 
+    y={"P:q", axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#1657a8", "#048059", "#6626bb"]
+        }
+    }
+) + @vlplot(
+    {:line, color="#f462a3", strokeDash=[4,4]}, data=df_repressilator2, width=120, height=90,
+    x={"t:q", axis={title=""}}, 
+    y={"P:q", axis={title="Protein"}},
+    color={
+        :gene,
+        type=:ordinal,
+        scale={
+            range=["#f462a3"]
+        }
+    }
+)
+
+# Save comparison figures
+savevl(fig_toggle_M_c,"output/toggle_sim_comparison_M_hill4")
+savevl(fig_toggle_P_c,"output/toggle_sim_comparison_P_hill4")
+savevl(fig_repressilator_M_c,"output/repressilator_sim_comparison_M_hill4")
+savevl(fig_repressilator_P_c,"output/repressilator_sim_comparison_P_hill4")

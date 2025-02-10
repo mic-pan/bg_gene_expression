@@ -10,8 +10,18 @@ TF2 = Dict(
     ],
 )
 
+TF4 = Dict(
+    :description => "Linear Transformer with modulus 2",
+    :numports => 2,
+    :equations => [
+        0 ~ E[2] - 4 * E[1],
+        0 ~ F[1] + 4 * F[2]
+    ],
+)
+
 addlibrary!(Dict(
-    :TF2 => TF2
+    :TF2 => TF2,
+    :TF4 => TF4,
 ))
 
 ## Model parameters
@@ -121,7 +131,7 @@ end
 
 ## Define the model of the toggle switch
 """Returns a bond graph model of the toggle switch."""
-function ToggleSwitch(name="ToggleSwitch";n=1200,n_lumps=1,log=true)
+function ToggleSwitch(name="ToggleSwitch";n=1200,n_lumps=1,log=true,h=2)
     model = BondGraph(name)
     A = Component(:se,:A)
     μA = EqualEffort(name=:μA)
@@ -136,8 +146,9 @@ function ToggleSwitch(name="ToggleSwitch";n=1200,n_lumps=1,log=true)
     P2 = Component(:ce_log,:P2)
     μP2 = EqualEffort(name=:μP2)
 
-    TF1 = Component(:TF2,:h1)
-    TF2 = Component(:TF2,:h2)
+    tf_symb = Symbol("TF$h")
+    TF1 = Component(tf_symb,:h1)
+    TF2 = Component(tf_symb,:h2)
 
     add_node!(model,[A,μA,R,μR,G1,P1,μP1,G2,P2,μP2,TF1,TF2])
 
@@ -167,7 +178,7 @@ function ToggleSwitch(name="ToggleSwitch";n=1200,n_lumps=1,log=true)
 end
 
 """Set parameters for the toggle switch."""
-function set_params_toggle!(model;n=1200,simple=true)
+function set_params_toggle!(model;n=1200,simple=true,h=2)
     set_params_gr!(model.G1,n=n,simple=simple)
     set_params_gr!(model.G2,n=n,simple=simple)
 
@@ -184,7 +195,6 @@ function set_params_toggle!(model;n=1200,simple=true)
     model.P2.μ0 = μ0_P
     model.P2.q = 1e-6
 
-    h = 2
     model.G1.Tc.μ_bI = h*(μ0_P + log(100)) 
     model.G2.Tc.μ_bI = h*(μ0_P + log(100))
 
@@ -198,7 +208,7 @@ end
 
 ## Define the model of the repressilator
 """Returns a bond graph model of the repressilator"""
-function Repressilator(name="Repressilator";n=1200,n_lumps=1,log=true)
+function Repressilator(name="Repressilator";n=1200,n_lumps=1,log=true,h=2)
     model = BondGraph(name)
     A = Component(:se,:A)
     μA = EqualEffort(name=:μA)
@@ -217,9 +227,10 @@ function Repressilator(name="Repressilator";n=1200,n_lumps=1,log=true)
     P3 = Component(:ce_log,:P3)
     μP3 = EqualEffort(name=:μP3)
 
-    TF1 = Component(:TF2,:h1)
-    TF2 = Component(:TF2,:h2)
-    TF3 = Component(:TF2,:h3)
+    tf_symb = Symbol("TF$h")
+    TF3 = Component(tf_symb,:h3)
+    TF1 = Component(tf_symb,:h1)
+    TF2 = Component(tf_symb,:h2)
 
     add_node!(model,[A,μA,R,μR,G1,P1,μP1,G2,P2,μP2,G3,P3,μP3,TF1,TF2,TF3])
 
@@ -255,7 +266,7 @@ function Repressilator(name="Repressilator";n=1200,n_lumps=1,log=true)
 end
 
 """Set parameters for the repressilator model."""
-function set_params_repressilator!(model;n=1200,simple=true)
+function set_params_repressilator!(model;n=1200,simple=true,h=2)
     A_nom = 5800000
     μA = 20
 
@@ -279,7 +290,6 @@ function set_params_repressilator!(model;n=1200,simple=true)
     model.P3.μ0 = μ0_P
     model.P3.q = 1000.0
 
-    h = 2
     model.G1.Tc.μ_bI = h*(μ0_P + log(100))
     model.G2.Tc.μ_bI = h*(μ0_P + log(100))
     model.G3.Tc.μ_bI = h*(μ0_P + log(100))
