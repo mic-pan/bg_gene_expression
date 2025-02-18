@@ -2,14 +2,14 @@
 
 ## Scripts
 This repository contains the Julia code required to run the bond graph model in the study *Thermodynamically-consistent, reduced models of gene regulatory networks*. The following files will generate the results figures as indicated below:
-| Script                           | Figures         |
-|----------------------------------|-----------------|
-|`elongation_model_comparison.jl`  | Fig. 7          |
-|`translation_model_comparison.jl` | Figs. 8, 9, S2  |
-|`gene_regulation_sims.jl`         | Figs. 10-11, S3 |
-|`resource_dependence.jl`          | Figs. 12-14     |
-|`heterogeneity.jl`                | Fig. 15         |
-|`toggle_phase_plane.jl`           | Fig. S1         |
+| Script                           | Figures            |
+|----------------------------------|--------------------|
+|`elongation_model_comparison.jl`  | Fig. 7             |
+|`translation_model_comparison.jl` | Figs. 8, 9, S2     |
+|`gene_regulation_sims.jl`         | Figs. 10-11, S3-S5 |
+|`resource_dependence.jl`          | Figs. 12-14        |
+|`heterogeneity.jl`                | Fig. 15            |
+|`toggle_phase_plane.jl`           | Fig. S1            |
 
 
 ## Instructions for running code
